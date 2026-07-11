@@ -11,7 +11,7 @@ export interface Macros {
 }
 
 export interface FoodLogEntry {
-  id: string;
+  owner: string;
   timestamp: string;
   rawInput: string;
   resolvedName: string | null;
@@ -21,7 +21,7 @@ export interface FoodLogEntry {
 }
 
 export interface FoodDictionaryEntry {
-  id: string;
+  owner: string;
   foodAlias: string;
   components: { item: string; qty: string }[] | null;
   macros: Macros;
@@ -30,7 +30,7 @@ export interface FoodDictionaryEntry {
 }
 
 export interface HydrationLogEntry {
-  id: string;
+  owner: string;
   timestamp: string;
   vesselType: string;
   oz: number;
@@ -45,7 +45,7 @@ export interface Symptoms {
 }
 
 export interface SymptomLogEntry {
-  id: string;
+  owner: string;
   date: string;
   injectionDay: boolean;
   symptoms: Symptoms;
@@ -57,7 +57,7 @@ export interface HydrationVessel {
 }
 
 export interface UserProfile {
-  id: string;
+  owner: string;
   displayName: string | null;
   dietaryPreference: string;
   hydrationVessels: HydrationVessel[];
@@ -73,7 +73,7 @@ export interface NutritionStatus {
 }
 
 export interface WeeklySummaryEntry {
-  id: string;
+  owner: string;
   weekStart: string;
   narrativeText: string;
   computedStats: {

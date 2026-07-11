@@ -1,7 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { randomUUID } from 'crypto';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env.SYMPTOM_LOG_TABLE || 'SymptomLog';
@@ -16,7 +15,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 
   const entry = {
-    id: randomUUID(),
     owner: userId,
     date,
     injectionDay: injectionDay || false,

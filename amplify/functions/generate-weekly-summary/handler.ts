@@ -2,7 +2,6 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { randomUUID } from 'crypto';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const bedrock = new BedrockRuntimeClient({ region: process.env.AWS_REGION || 'us-east-1' });
@@ -134,7 +133,6 @@ Write a 3-5 sentence narrative summary. Include what they did well, one pattern 
   const narrativeText = responseBody.content[0].text;
 
   const summary = {
-    id: randomUUID(),
     owner: userId,
     weekStart,
     narrativeText,

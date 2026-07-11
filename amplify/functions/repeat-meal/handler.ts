@@ -1,7 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { randomUUID } from 'crypto';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const FOOD_LOG_TABLE = process.env.FOOD_LOG_TABLE || 'FoodLog';
@@ -29,14 +28,14 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }));
 
   const sourceEntries = queryResult.Items || [];
-  const now = new Date();
+  const now = Date.now();
   const newEntries = [];
 
-  for (const entry of sourceEntries) {
+  for (let i = 0; i < sourceEntries.length; i++) {
+    const entry = sourceEntries[i];
     const newEntry = {
-      id: randomUUID(),
       owner: userId,
-      timestamp: now.toISOString(),
+      timestamp: new Date(now + i).toISOString(),
       rawInput: entry.rawInput,
       resolvedName: entry.resolvedName,
       macros: entry.macros,
@@ -50,7 +49,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       TableName: RECENT_FOOD_TABLE,
       Key: { owner: userId, foodAlias: (entry.resolvedName || entry.rawInput).toLowerCase() },
       UpdateExpression: 'SET lastUsed = :now, useCount = if_not_exists(useCount, :zero) + :one',
-      ExpressionAttributeValues: { ':now': now.toISOString(), ':zero': 0, ':one': 1 },
+      ExpressionAttributeValues: { ':now': newEntry.timestamp, ':zero': 0, ':one': 1 },
     }));
 
     newEntries.push(newEntry);
