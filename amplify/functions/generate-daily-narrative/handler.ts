@@ -74,7 +74,7 @@ Never mention calories. Never shame. Respect their dietary preference.`;
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify(aiResponse),
   };
 }

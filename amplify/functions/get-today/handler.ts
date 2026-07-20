@@ -83,7 +83,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ nutrition, entries, hydration: { totalOz, entries: hydrationEntries } }),
   };
 }

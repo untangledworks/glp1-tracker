@@ -11,7 +11,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const { foodAlias, components, macros } = body;
 
   if (!foodAlias || !macros) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'foodAlias and macros are required' }) };
+    return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'foodAlias and macros are required' }) };
   }
 
   const entry = {
@@ -27,7 +27,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ entry }),
   };
 }

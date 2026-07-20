@@ -12,7 +12,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const { mealSlot, sourceDate } = body;
 
   if (!mealSlot) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'mealSlot is required' }) };
+    return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'mealSlot is required' }) };
   }
 
   const yesterday = sourceDate || new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -57,7 +57,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   return {
     statusCode: 201,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ entries: newEntries }),
   };
 }

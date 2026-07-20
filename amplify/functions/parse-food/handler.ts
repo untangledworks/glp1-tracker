@@ -13,7 +13,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const { rawInput } = body;
 
   if (!rawInput || typeof rawInput !== 'string') {
-    return { statusCode: 400, body: JSON.stringify({ error: 'rawInput is required' }) };
+    return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'rawInput is required' }) };
   }
 
   const prompt = PROMPT_TEMPLATE.replace('{INPUT}', rawInput);
@@ -38,7 +38,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ macros, resolvedName: rawInput }),
   };
 }

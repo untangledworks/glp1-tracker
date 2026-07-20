@@ -146,7 +146,7 @@ Write a 3-5 sentence narrative summary. Include what they did well, one pattern 
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ summary }),
   };
 }

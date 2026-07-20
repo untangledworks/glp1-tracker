@@ -11,7 +11,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const { vesselType, oz } = body;
 
   if (!vesselType || typeof oz !== 'number') {
-    return { statusCode: 400, body: JSON.stringify({ error: 'vesselType and oz are required' }) };
+    return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'vesselType and oz are required' }) };
   }
 
   const entry = {
@@ -25,7 +25,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   return {
     statusCode: 201,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ entry }),
   };
 }

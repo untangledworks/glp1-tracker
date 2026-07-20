@@ -11,7 +11,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const { date, injectionDay, symptoms } = body;
 
   if (!date || !symptoms) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'date and symptoms are required' }) };
+    return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'date and symptoms are required' }) };
   }
 
   const entry = {
@@ -25,7 +25,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   return {
     statusCode: 201,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ entry }),
   };
 }
