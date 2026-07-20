@@ -65,7 +65,10 @@ for (const [, config] of Object.entries(functionTableAccess)) {
 const bedrockPolicy = new PolicyStatement({
   effect: Effect.ALLOW,
   actions: ['bedrock:InvokeModel'],
-  resources: ['arn:aws:bedrock:*::foundation-model/anthropic.*'],
+  resources: [
+    'arn:aws:bedrock:*::foundation-model/anthropic.*',
+    'arn:aws:bedrock:*:*:inference-profile/us.anthropic.*',
+  ],
 });
 
 backend.parseFood.resources.lambda.role?.attachInlinePolicy(

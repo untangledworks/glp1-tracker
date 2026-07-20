@@ -121,7 +121,7 @@ ${correlations.length > 0 ? correlations.join('\n') : 'No significant correlatio
 Write a 3-5 sentence narrative summary. Include what they did well, one pattern worth noting (especially symptom correlations if any), and one specific actionable suggestion that fits their diet. If average calories are notably low (under 1000), gently suggest they may not be eating enough overall — but frame it qualitatively ("eating enough to fuel your body") rather than citing the number. Be encouraging and specific.`;
 
   const command = new InvokeModelCommand({
-    modelId: 'anthropic.claude-sonnet-4-5-20250929-v1:0',
+    modelId: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
