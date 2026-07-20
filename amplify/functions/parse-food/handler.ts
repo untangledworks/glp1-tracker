@@ -33,7 +33,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const responseBody = JSON.parse(new TextDecoder().decode(response.body));
   const macrosText = responseBody.content[0].text;
 
-  const macros = JSON.parse(macrosText);
+  const cleaned = macrosText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const macros = JSON.parse(cleaned);
 
   return {
     statusCode: 200,

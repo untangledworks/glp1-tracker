@@ -69,7 +69,8 @@ Never mention calories. Never shame. Respect their dietary preference.`;
 
   const response = await bedrock.send(command);
   const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-  const aiResponse = JSON.parse(responseBody.content[0].text);
+  const rawText = responseBody.content[0].text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const aiResponse = JSON.parse(rawText);
 
   return {
     statusCode: 200,
