@@ -18,7 +18,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
 
   if (isLoading) return <div className="flex items-center justify-center h-screen text-forest/50">Loading...</div>;
-  if (isAuthenticated && step === 'welcome') return <Navigate to="/" />;
+  if (isAuthenticated && localStorage.getItem('onboardingComplete') === 'true') return <Navigate to="/" />;
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +62,7 @@ export default function Onboarding() {
 
   function handleSleepChoice(enabled: boolean) {
     localStorage.setItem('sleepTrackingEnabled', enabled ? 'true' : 'false');
+    localStorage.setItem('onboardingComplete', 'true');
     navigate('/');
   }
 
