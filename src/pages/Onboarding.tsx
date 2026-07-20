@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { confirmSignUp } from 'aws-amplify/auth';
 
-type Step = 'welcome' | 'signin' | 'diet' | 'injection' | 'sleep';
+type Step = 'welcome' | 'signin' | 'confirm' | 'diet' | 'injection' | 'sleep';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -10,10 +11,14 @@ export default function Onboarding() {
   const [step, setStep] = useState<Step>('welcome');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmCode, setConfirmCode] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  if (isLoading) return <div className="flex items-center justify-center h-screen text-forest/50">Loading...</div>;
+  if (isAuthenticated && step === 'welcome') return <Navigate to="/" />;
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -21,13 +26,25 @@ export default function Onboarding() {
     try {
       if (isSignUp) {
         await signUp(email, password);
-        await signIn(email, password);
+        setStep('confirm');
       } else {
         await signIn(email, password);
+        setStep('diet');
       }
-      setStep('diet');
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
+    }
+  }
+
+  async function handleConfirm(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    try {
+      await confirmSignUp({ username: email, confirmationCode: confirmCode });
+      await signIn(email, password);
+      setStep('diet');
+    } catch (err: any) {
+      setError(err.message || 'Confirmation failed');
     }
   }
 
@@ -120,6 +137,34 @@ export default function Onboarding() {
         >
           {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
         </button>
+      </div>
+    );
+  }
+
+  if (step === 'confirm') {
+    return (
+      <div className="flex flex-col justify-center min-h-screen p-8 max-w-md mx-auto">
+        <h2 className="font-display text-2xl font-semibold mb-2">Check your email</h2>
+        <p className="text-forest/60 mb-8">We sent a verification code to {email}</p>
+        <form onSubmit={handleConfirm} className="space-y-4">
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="Enter 6-digit code"
+            value={confirmCode}
+            onChange={(e) => setConfirmCode(e.target.value)}
+            className="w-full bg-white border border-forest/10 rounded-2xl px-4 py-3.5 text-lg text-center tracking-widest placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage"
+            required
+          />
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-sage text-white py-3.5 rounded-2xl text-lg font-medium hover:bg-sage-dark transition-colors"
+          >
+            Verify
+          </button>
+        </form>
       </div>
     );
   }
