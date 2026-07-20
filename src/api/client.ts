@@ -1,5 +1,8 @@
 import { fetchAuthSession } from 'aws-amplify/auth';
 import type { Macros, FoodLogEntry, HydrationLogEntry, SymptomLogEntry, NutritionStatus, MealSlot } from '../types';
+import { mockApi } from './mock-client';
+
+const IS_MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -23,7 +26,7 @@ async function authFetch(path: string, options: RequestInit = {}) {
   return response.json();
 }
 
-export const api = {
+const realApi = {
   parseFood(rawInput: string): Promise<{ macros: Macros; resolvedName: string }> {
     return authFetch('/parse-food', { method: 'POST', body: JSON.stringify({ rawInput }) });
   },
@@ -36,7 +39,15 @@ export const api = {
     return authFetch('/log-hydration', { method: 'POST', body: JSON.stringify({ vesselType, oz }) });
   },
 
-  logSymptoms(data: { date: string; injectionDay: boolean; symptoms: Record<string, number> }): Promise<{ entry: SymptomLogEntry }> {
+  logSymptoms(data: {
+    date: string;
+    injectionDay: boolean;
+    injectionSite?: string;
+    symptoms: Record<string, number>;
+    supplementsTaken?: boolean;
+    sleepBedTime?: string;
+    sleepWakeTime?: string;
+  }): Promise<{ entry: SymptomLogEntry }> {
     return authFetch('/log-symptoms', { method: 'POST', body: JSON.stringify(data) });
   },
 
@@ -66,3 +77,5 @@ export const api = {
     return authFetch('/get-weekly-summary');
   },
 };
+
+export const api = IS_MOCK ? mockApi : realApi;
