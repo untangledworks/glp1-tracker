@@ -2,6 +2,8 @@ export type MealSlot = 'BREAKFAST' | 'LUNCH' | 'SNACK' | 'DINNER';
 
 export type SymptomSeverity = 0 | 1 | 2 | 3;
 
+export type InjectionSite = 'stomach' | 'left-thigh' | 'right-thigh' | 'left-arm' | 'right-arm';
+
 export interface Macros {
   protein: number;
   carbs: number;
@@ -48,7 +50,11 @@ export interface SymptomLogEntry {
   owner: string;
   date: string;
   injectionDay: boolean;
+  injectionSite?: InjectionSite;
   symptoms: Symptoms;
+  supplementsTaken?: boolean;
+  sleepBedTime?: string;
+  sleepWakeTime?: string;
 }
 
 export interface HydrationVessel {
