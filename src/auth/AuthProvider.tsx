@@ -1,6 +1,8 @@
 import { createContext, useEffect, useState, ReactNode } from 'react';
 import { getCurrentUser, signIn, signOut, signUp, fetchAuthSession } from 'aws-amplify/auth';
 
+const IS_MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
+
 interface AuthUser {
   userId: string;
   email: string;
@@ -19,11 +21,11 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(IS_MOCK ? { userId: 'mock-user-123', email: 'dev@test.com' } : null);
+  const [isLoading, setIsLoading] = useState(!IS_MOCK);
 
   useEffect(() => {
-    checkAuth();
+    if (!IS_MOCK) checkAuth();
   }, []);
 
   async function checkAuth() {
@@ -38,20 +40,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleSignIn(email: string, password: string) {
+    if (IS_MOCK) {
+      setUser({ userId: 'mock-user-123', email });
+      return;
+    }
     await signIn({ username: email, password });
     await checkAuth();
   }
 
   async function handleSignUp(email: string, password: string) {
+    if (IS_MOCK) return;
     await signUp({ username: email, password });
   }
 
   async function handleSignOut() {
+    if (IS_MOCK) {
+      setUser(null);
+      return;
+    }
     await signOut();
     setUser(null);
   }
 
   async function getToken(): Promise<string> {
+    if (IS_MOCK) return 'mock-token';
     const session = await fetchAuthSession();
     return session.tokens?.idToken?.toString() || '';
   }

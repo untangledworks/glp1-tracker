@@ -7,9 +7,9 @@ interface QualitativeProgressProps {
 }
 
 const colorMap = {
-  green: { bg: 'bg-emerald-500', text: 'text-emerald-700', icon: '🟢' },
-  yellow: { bg: 'bg-amber-400', text: 'text-amber-700', icon: '🟡' },
-  red: { bg: 'bg-red-400', text: 'text-red-700', icon: '🔴' },
+  green: { bar: 'bg-sage', text: 'text-sage-dark', track: 'bg-sage-light' },
+  yellow: { bar: 'bg-honey', text: 'text-honey', track: 'bg-honey/10' },
+  red: { bar: 'bg-red-400', text: 'text-red-600', track: 'bg-red-50' },
 };
 
 export function QualitativeProgress({ label, statusLabel, color, current, target }: QualitativeProgressProps) {
@@ -17,18 +17,17 @@ export function QualitativeProgress({ label, statusLabel, color, current, target
   const colors = colorMap[color];
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-2">
-        <span>{colors.icon}</span>
-        <span className="font-medium text-gray-800">{label}</span>
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between">
+        <span className="font-medium text-forest">{label}</span>
       </div>
-      <p className={`text-sm ${colors.text} pl-7`}>{statusLabel}</p>
-      <div className="h-2 bg-gray-100 rounded-full ml-7">
+      <div className={`h-2.5 ${colors.track} rounded-full overflow-hidden`}>
         <div
-          className={`h-2 rounded-full ${colors.bg} transition-all`}
+          className={`h-full rounded-full ${colors.bar} transition-all duration-500 ease-out`}
           style={{ width: `${ratio * 100}%` }}
         />
       </div>
+      <p className={`text-sm ${colors.text}`}>{statusLabel}</p>
     </div>
   );
 }

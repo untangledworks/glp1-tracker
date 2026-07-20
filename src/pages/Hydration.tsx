@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { VesselButton } from '../components/VesselButton';
 import { useHydration } from '../hooks/useHydration';
 
@@ -9,14 +8,14 @@ export default function Hydration() {
   const vessels = JSON.parse(localStorage.getItem('hydrationVessels') || '[{"name":"glass","oz":12},{"name":"bottle","oz":24}]');
 
   if (isLoading) {
-    return <div className="p-4 text-gray-500">Loading...</div>;
+    return <div className="text-forest/40">Loading...</div>;
   }
 
   return (
-    <div className="p-4 space-y-6 pb-20">
-      <h1 className="text-xl font-bold text-gray-800">Hydration</h1>
+    <div className="space-y-6">
+      <h1 className="font-display text-2xl font-semibold">Hydration</h1>
 
-      <div className="flex justify-center gap-6">
+      <div className="flex justify-center gap-4">
         {vessels.map((v: { name: string; oz: number }) => (
           <VesselButton
             key={v.name}
@@ -27,39 +26,33 @@ export default function Hydration() {
         ))}
       </div>
 
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm text-gray-600">
-          <span>Today: {totalOz} oz</span>
-          <span>{Math.round(ratio * 100)}%</span>
+      <div className="bg-white rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="flex justify-between text-sm">
+          <span className="text-forest/60">{totalOz} oz today</span>
+          <span className="font-medium text-sky-600">{Math.round(ratio * 100)}%</span>
         </div>
-        <div className="h-3 bg-gray-100 rounded-full">
+        <div className="h-3 bg-sky-100 rounded-full overflow-hidden">
           <div
-            className="h-3 rounded-full bg-blue-500 transition-all"
+            className="h-full rounded-full bg-sky-500 transition-all duration-500 ease-out"
             style={{ width: `${ratio * 100}%` }}
           />
         </div>
       </div>
 
       {entries.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-medium text-forest/50 uppercase tracking-wide mb-2">Log</h2>
           {entries.map((entry) => (
-            <div key={entry.timestamp} className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{entry.vesselType === 'bottle' ? '🫗' : '🥛'}</span>
+            <div key={entry.timestamp} className="flex items-center gap-3 text-sm text-forest/60">
+              <svg className="w-4 h-4 text-sky-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z" />
+              </svg>
               <span>{new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
+              <span className="text-forest/40">{entry.oz} oz</span>
             </div>
           ))}
         </div>
       )}
-
-      {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-around max-w-md mx-auto">
-        <Link to="/" className="text-gray-500 text-xs">Log</Link>
-        <Link to="/nutrition" className="text-gray-500 text-xs">Nutrition</Link>
-        <Link to="/hydration" className="text-blue-600 text-xs font-medium">Water</Link>
-        <Link to="/symptoms" className="text-gray-500 text-xs">Symptoms</Link>
-        <Link to="/weekly" className="text-gray-500 text-xs">Week</Link>
-        <Link to="/settings" className="text-gray-500 text-xs">Settings</Link>
-      </nav>
     </div>
   );
 }

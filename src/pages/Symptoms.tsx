@@ -1,19 +1,10 @@
 import { useState } from 'react';
 import { SymptomSlider } from '../components/SymptomSlider';
 import { api } from '../api/client';
-import type { Symptoms, InjectionSite } from '../types';
-
-const INJECTION_SITES: { value: InjectionSite; label: string }[] = [
-  { value: 'stomach', label: 'Stomach' },
-  { value: 'left-thigh', label: 'Left Thigh' },
-  { value: 'right-thigh', label: 'Right Thigh' },
-  { value: 'left-arm', label: 'Left Arm' },
-  { value: 'right-arm', label: 'Right Arm' },
-];
+import type { Symptoms } from '../types';
 
 export default function Symptoms() {
   const [injectionDay, setInjectionDay] = useState(false);
-  const [injectionSite, setInjectionSite] = useState<InjectionSite | undefined>();
   const [symptoms, setSymptoms] = useState<Symptoms>({
     nausea: 0,
     constipation: 0,
@@ -44,7 +35,6 @@ export default function Symptoms() {
       await api.logSymptoms({
         date: today,
         injectionDay,
-        injectionSite: injectionDay ? injectionSite : undefined,
         symptoms: symptoms as unknown as Record<string, number>,
         supplementsTaken,
         sleepBedTime: sleepEnabled ? bedTime : undefined,
@@ -110,27 +100,6 @@ export default function Symptoms() {
         </div>
         <span className="text-forest/80">Injection day</span>
       </button>
-
-      {injectionDay && (
-        <div className="bg-white rounded-2xl p-5 shadow-sm space-y-3">
-          <h3 className="text-sm font-medium text-forest/60">Injection site</h3>
-          <div className="flex flex-wrap gap-2">
-            {INJECTION_SITES.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => { setInjectionSite(value); setSaved(false); }}
-                className={`text-sm px-3 py-1.5 rounded-full transition-colors ${
-                  injectionSite === value
-                    ? 'bg-sage text-white'
-                    : 'bg-linen text-forest/70 hover:bg-sage-light'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="space-y-5 bg-white rounded-2xl p-5 shadow-sm">
         <SymptomSlider label="Nausea" value={symptoms.nausea} onChange={v => updateSymptom('nausea', v)} />

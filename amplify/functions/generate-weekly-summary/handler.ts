@@ -94,19 +94,22 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   const totalProtein = foodItems.reduce((s: number, e: any) => s + (e.macros?.protein || 0), 0);
   const totalFiber = foodItems.reduce((s: number, e: any) => s + (e.macros?.fiber || 0), 0);
+  const totalCalories = foodItems.reduce((s: number, e: any) => s + (e.macros?.calories || 0), 0);
   const totalOz = hydrationItems.reduce((s: number, e: any) => s + (e.oz || 0), 0);
   const daysWithHydration = new Set(hydrationItems.map((e: any) => e.timestamp?.split('T')[0])).size;
 
   const avgProtein = Math.round(totalProtein / 7);
   const avgFiber = Math.round(totalFiber / 7);
+  const avgCalories = Math.round(totalCalories / 7);
   const correlations = findSymptomCorrelations(foodItems, symptomItems);
 
-  const computedStats = { avgProtein, avgFiber, hydrationDays: daysWithHydration, symptomCorrelations: correlations };
+  const computedStats = { avgProtein, avgFiber, avgCalories, hydrationDays: daysWithHydration, symptomCorrelations: correlations };
 
   const prompt = `You are a supportive nutrition coach for someone on GLP-1 medication.
 Their dietary preference: ${user.dietaryPreference || 'no restrictions'}.
 
 Here are their computed stats for the week:
+- Average daily calories: ${avgCalories}
 - Average daily protein: ${avgProtein}g (target: ${user.proteinTarget || 60}g)
 - Average daily fiber: ${avgFiber}g (target: ${user.fiberTarget || 25}g)
 - Days with hydration logged: ${daysWithHydration}/7
@@ -115,7 +118,7 @@ Here are their computed stats for the week:
 Symptom-nutrition correlations found:
 ${correlations.length > 0 ? correlations.join('\n') : 'No significant correlations detected.'}
 
-Write a 3-5 sentence narrative summary. Include what they did well, one pattern worth noting (especially symptom correlations if any), and one specific actionable suggestion that fits their diet. Never mention calories. Be encouraging and specific.`;
+Write a 3-5 sentence narrative summary. Include what they did well, one pattern worth noting (especially symptom correlations if any), and one specific actionable suggestion that fits their diet. If average calories are notably low (under 1000), gently suggest they may not be eating enough overall — but frame it qualitatively ("eating enough to fuel your body") rather than citing the number. Be encouraging and specific.`;
 
   const command = new InvokeModelCommand({
     modelId: 'anthropic.claude-3-haiku-20240307-v1:0',

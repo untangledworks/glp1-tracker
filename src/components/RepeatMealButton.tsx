@@ -44,17 +44,17 @@ export function RepeatMealButton({ onMealRepeated }: RepeatMealButtonProps) {
       <button
         onClick={() => handleRepeat(contextualMeal)}
         disabled={isLoading}
-        className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-xl px-4 py-4 text-lg font-medium text-emerald-800 disabled:opacity-50"
+        className="w-full bg-sage-light border border-sage/20 rounded-2xl px-4 py-4 text-base font-medium text-sage-dark disabled:opacity-50 hover:bg-sage-light/80 transition-colors"
       >
-        {isLoading ? 'Repeating...' : `Repeat Yesterday's ${mealLabel(contextualMeal)}`}
+        {isLoading ? 'Repeating...' : `Repeat yesterday's ${mealLabel(contextualMeal)}`}
       </button>
 
       {!expanded ? (
         <button
           onClick={() => setExpanded(true)}
-          className="text-sm text-emerald-600 pl-1"
+          className="text-sm text-sage pl-1 hover:text-sage-dark transition-colors"
         >
-          ▸ Repeat a different meal
+          Other meals...
         </button>
       ) : (
         <div className="grid grid-cols-3 gap-2">
@@ -63,7 +63,7 @@ export function RepeatMealButton({ onMealRepeated }: RepeatMealButtonProps) {
               key={slot}
               onClick={() => handleRepeat(slot)}
               disabled={isLoading}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 hover:border-emerald-400"
+              className="border border-forest/10 rounded-xl px-3 py-2.5 text-sm text-forest/70 hover:border-sage hover:bg-sage-light/50 transition-colors"
             >
               {mealLabel(slot)}
             </button>

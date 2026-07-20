@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { FoodInput } from '../components/FoodInput';
 import { RepeatMealButton } from '../components/RepeatMealButton';
 import { FoodLogEntry } from '../components/FoodLogEntry';
-import { NarrativeCard } from '../components/NarrativeCard';
 import { QualitativeProgress } from '../components/QualitativeProgress';
 import { InjectionBadge } from '../components/InjectionBadge';
 import { SupplementToggle } from '../components/SupplementToggle';
@@ -14,13 +13,11 @@ import type { FoodLogEntry as FoodLogEntryType, NutritionStatus } from '../types
 export default function Home() {
   const [entries, setEntries] = useState<FoodLogEntryType[]>([]);
   const [recentFoods, setRecentFoods] = useState<string[]>([]);
-  const [narrative, setNarrative] = useState<{ narrative: string; suggestions: string[] } | null>(null);
   const [nutrition, setNutrition] = useState<NutritionStatus | null>(null);
 
   useEffect(() => {
     loadToday();
     loadRecent();
-    loadNarrative();
   }, []);
 
   async function loadToday() {
@@ -42,24 +39,13 @@ export default function Home() {
     }
   }
 
-  async function loadNarrative() {
-    try {
-      const data = await api.getDailyNarrative();
-      setNarrative(data);
-    } catch (err) {
-      console.error('Failed to load narrative:', err);
-    }
-  }
-
   function handleFoodLogged(entry: FoodLogEntryType) {
     setEntries(prev => [...prev, entry]);
-    loadNarrative();
     loadToday();
   }
 
   function handleMealRepeated(newEntries: FoodLogEntryType[]) {
     setEntries(prev => [...prev, ...newEntries]);
-    loadNarrative();
     loadToday();
   }
 
@@ -68,7 +54,6 @@ export default function Home() {
       const { macros, resolvedName } = await api.parseFood(food);
       const { entry } = await api.logFood({ rawInput: food, resolvedName, macros });
       setEntries(prev => [...prev, entry]);
-      loadNarrative();
       loadToday();
     } catch (err) {
       console.error('Failed to quick-log food:', err);
@@ -115,10 +100,6 @@ export default function Home() {
             target={nutrition.hydration.target}
           />
         </div>
-      )}
-
-      {narrative && (
-        <NarrativeCard narrative={narrative.narrative} suggestions={narrative.suggestions} />
       )}
 
       <FoodInput onFoodLogged={handleFoodLogged} />
