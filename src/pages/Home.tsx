@@ -1,24 +1,33 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { FoodInput } from '../components/FoodInput';
 import { RepeatMealButton } from '../components/RepeatMealButton';
 import { FoodLogEntry } from '../components/FoodLogEntry';
+import { NarrativeCard } from '../components/NarrativeCard';
+import { QualitativeProgress } from '../components/QualitativeProgress';
+import { InjectionBadge } from '../components/InjectionBadge';
+import { SupplementToggle } from '../components/SupplementToggle';
+import { SleepCard } from '../components/SleepCard';
+import { getGreeting } from '../utils/greeting';
 import { api } from '../api/client';
-import type { FoodLogEntry as FoodLogEntryType } from '../types';
+import type { FoodLogEntry as FoodLogEntryType, NutritionStatus } from '../types';
 
 export default function Home() {
   const [entries, setEntries] = useState<FoodLogEntryType[]>([]);
   const [recentFoods, setRecentFoods] = useState<string[]>([]);
+  const [narrative, setNarrative] = useState<{ narrative: string; suggestions: string[] } | null>(null);
+  const [nutrition, setNutrition] = useState<NutritionStatus | null>(null);
 
   useEffect(() => {
     loadToday();
     loadRecent();
+    loadNarrative();
   }, []);
 
   async function loadToday() {
     try {
       const data = await api.getToday();
       setEntries(data.entries);
+      setNutrition(data.nutrition);
     } catch (err) {
       console.error('Failed to load today:', err);
     }
@@ -33,17 +42,84 @@ export default function Home() {
     }
   }
 
+  async function loadNarrative() {
+    try {
+      const data = await api.getDailyNarrative();
+      setNarrative(data);
+    } catch (err) {
+      console.error('Failed to load narrative:', err);
+    }
+  }
+
   function handleFoodLogged(entry: FoodLogEntryType) {
     setEntries(prev => [...prev, entry]);
+    loadNarrative();
+    loadToday();
   }
 
   function handleMealRepeated(newEntries: FoodLogEntryType[]) {
     setEntries(prev => [...prev, ...newEntries]);
+    loadNarrative();
+    loadToday();
   }
 
+  async function quickLog(food: string) {
+    try {
+      const { macros, resolvedName } = await api.parseFood(food);
+      const { entry } = await api.logFood({ rawInput: food, resolvedName, macros });
+      setEntries(prev => [...prev, entry]);
+      loadNarrative();
+      loadToday();
+    } catch (err) {
+      console.error('Failed to quick-log food:', err);
+    }
+  }
+
+  const displayName = localStorage.getItem('displayName');
+  const greeting = getGreeting(displayName);
+
   return (
-    <div className="p-4 space-y-4 pb-20">
-      <h1 className="text-2xl font-bold text-gray-800">Log your food</h1>
+    <div className="space-y-5">
+      <div>
+        <h1 className="font-display text-2xl font-semibold">{greeting}</h1>
+        <div className="mt-2">
+          <InjectionBadge />
+        </div>
+      </div>
+
+      <SupplementToggle />
+
+      <SleepCard />
+
+      {nutrition && (
+        <div className="space-y-4 bg-white rounded-2xl p-5 shadow-sm">
+          <QualitativeProgress
+            label="Protein"
+            statusLabel={nutrition.protein.label}
+            color={nutrition.protein.color}
+            current={nutrition.protein.current}
+            target={nutrition.protein.target}
+          />
+          <QualitativeProgress
+            label="Fiber"
+            statusLabel={nutrition.fiber.label}
+            color={nutrition.fiber.color}
+            current={nutrition.fiber.current}
+            target={nutrition.fiber.target}
+          />
+          <QualitativeProgress
+            label="Hydration"
+            statusLabel={nutrition.hydration.label}
+            color={nutrition.hydration.color}
+            current={nutrition.hydration.current}
+            target={nutrition.hydration.target}
+          />
+        </div>
+      )}
+
+      {narrative && (
+        <NarrativeCard narrative={narrative.narrative} suggestions={narrative.suggestions} />
+      )}
 
       <FoodInput onFoodLogged={handleFoodLogged} />
 
@@ -52,31 +128,27 @@ export default function Home() {
       {recentFoods.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           {recentFoods.map(food => (
-            <span key={food} className="text-sm bg-gray-100 rounded-full px-3 py-1 text-gray-600">
+            <button
+              key={food}
+              onClick={() => quickLog(food)}
+              className="text-sm bg-linen rounded-full px-3 py-1.5 text-forest/70 hover:bg-sage-light active:scale-95 transition-all"
+            >
               {food}
-            </span>
+            </button>
           ))}
         </div>
       )}
 
       {entries.length > 0 && (
         <div>
-          <h2 className="text-sm font-medium text-gray-500 mb-2">Today</h2>
-          {entries.map(entry => (
-            <FoodLogEntry key={entry.timestamp} entry={entry} />
-          ))}
+          <h2 className="text-xs font-medium text-forest/50 uppercase tracking-wide mb-3">Today</h2>
+          <div className="space-y-1">
+            {entries.map(entry => (
+              <FoodLogEntry key={entry.timestamp} entry={entry} />
+            ))}
+          </div>
         </div>
       )}
-
-      {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-around max-w-md mx-auto">
-        <Link to="/" className="text-emerald-600 text-xs font-medium">Log</Link>
-        <Link to="/nutrition" className="text-gray-500 text-xs">Nutrition</Link>
-        <Link to="/hydration" className="text-gray-500 text-xs">Water</Link>
-        <Link to="/symptoms" className="text-gray-500 text-xs">Symptoms</Link>
-        <Link to="/weekly" className="text-gray-500 text-xs">Week</Link>
-        <Link to="/settings" className="text-gray-500 text-xs">Settings</Link>
-      </nav>
     </div>
   );
 }
