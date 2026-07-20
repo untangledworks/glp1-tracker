@@ -61,6 +61,27 @@ for (const [, config] of Object.entries(functionTableAccess)) {
   }
 }
 
+// Explicit DynamoDB policy for all functions (covers cases where CDK grant doesn't apply)
+const dynamoPolicy = new PolicyStatement({
+  effect: Effect.ALLOW,
+  actions: ['dynamodb:PutItem', 'dynamodb:GetItem', 'dynamodb:UpdateItem', 'dynamodb:Query', 'dynamodb:DeleteItem'],
+  resources: [
+    `arn:aws:dynamodb:*:*:table/FoodLog`,
+    `arn:aws:dynamodb:*:*:table/RecentFoodIndex`,
+    `arn:aws:dynamodb:*:*:table/HydrationLog`,
+    `arn:aws:dynamodb:*:*:table/SymptomLog`,
+    `arn:aws:dynamodb:*:*:table/User`,
+    `arn:aws:dynamodb:*:*:table/FoodDictionary`,
+    `arn:aws:dynamodb:*:*:table/WeeklySummary`,
+  ],
+});
+
+for (const [name, config] of Object.entries(functionTableAccess)) {
+  config.fn.resources.lambda.role?.attachInlinePolicy(
+    new Policy(Stack.of(config.fn), `DynamoAccess-${name}`, { statements: [dynamoPolicy] })
+  );
+}
+
 // Grant Bedrock access to functions that call Claude
 const bedrockPolicy = new PolicyStatement({
   effect: Effect.ALLOW,
