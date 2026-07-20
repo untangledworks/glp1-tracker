@@ -1,10 +1,11 @@
 import { fetchAuthSession } from 'aws-amplify/auth';
 import type { Macros, FoodLogEntry, HydrationLogEntry, SymptomLogEntry, NutritionStatus, MealSlot } from '../types';
 import { mockApi } from './mock-client';
+import outputs from '../../amplify_outputs.json';
 
 const IS_MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = (outputs as any)?.custom?.apiUrl?.replace(/\/$/, '') || import.meta.env.VITE_API_URL || '';
 
 async function authFetch(path: string, options: RequestInit = {}) {
   const session = await fetchAuthSession();
