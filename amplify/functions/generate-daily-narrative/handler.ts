@@ -57,7 +57,7 @@ The narrative should be warm and encouraging. If they're short on something and 
 Never mention calories. Never shame. Respect their dietary preference.`;
 
   const command = new InvokeModelCommand({
-    modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+    modelId: 'anthropic.claude-sonnet-5-v1:0',
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({

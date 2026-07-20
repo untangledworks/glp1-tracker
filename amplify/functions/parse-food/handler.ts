@@ -19,7 +19,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const prompt = PROMPT_TEMPLATE.replace('{INPUT}', rawInput);
 
   const command = new InvokeModelCommand({
-    modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+    modelId: 'anthropic.claude-sonnet-5-v1:0',
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
