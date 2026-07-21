@@ -37,8 +37,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     });
   }, [isAuthenticated]);
 
-  if (isLoading || !settingsChecked) return <div className="flex items-center justify-center h-screen text-forest/50">Loading...</div>;
+  if (isLoading) return <div className="flex items-center justify-center h-screen text-forest/50">Loading...</div>;
   if (!isAuthenticated) return <Navigate to="/onboarding" />;
+  if (!settingsChecked) return <div className="flex items-center justify-center h-screen text-forest/50">Loading...</div>;
   const onboarded = localStorage.getItem('onboardingComplete') === 'true' || localStorage.getItem('dietaryPreference') !== null;
   if (!onboarded) return <Navigate to="/onboarding" />;
   return <>{children}</>;
