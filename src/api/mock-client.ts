@@ -172,6 +172,22 @@ export const mockApi = {
     };
   },
 
+  async deleteFood(timestamp: string): Promise<{ deleted: boolean }> {
+    await delay(150);
+    foodLog = foodLog.filter(e => e.timestamp !== timestamp);
+    return { deleted: true };
+  },
+
+  async saveSettings(settings: Record<string, any>): Promise<{ settings: Record<string, any> }> {
+    await delay(200);
+    return { settings };
+  },
+
+  async getSettings(): Promise<{ settings: Record<string, any> }> {
+    await delay(200);
+    return { settings: {} };
+  },
+
   async getWeeklySummary(): Promise<{ summary: { narrativeText: string; computedStats: any } }> {
     await delay(400);
     return {
