@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -9,7 +9,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const userId = event.requestContext.authorizer?.claims?.sub;
   const body = JSON.parse(event.body || '{}');
 
-  const item: Record<string, any> = { owner: userId };
+  const existing = await client.send(new GetCommand({ TableName: USER_TABLE, Key: { owner: userId } }));
+  const now = new Date().toISOString();
+  const item: Record<string, any> = {
+    owner: userId,
+    createdAt: existing.Item?.createdAt || now,
+    updatedAt: now,
+  };
 
   if (body.dietaryPreference !== undefined) item.dietaryPreference = body.dietaryPreference;
   if (body.proteinTarget !== undefined) item.proteinTarget = body.proteinTarget;

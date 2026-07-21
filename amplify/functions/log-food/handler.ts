@@ -28,6 +28,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const timestamp = `${dateComponent}T${timeComponent}`;
   const inferredSlot = mealSlot || inferMealSlot(now.getHours());
 
+  const now_iso = now.toISOString();
   const entry = {
     owner: userId,
     timestamp,
@@ -36,6 +37,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     macros,
     mealSlot: inferredSlot,
     dictionaryRef: dictionaryRef || null,
+    createdAt: now_iso,
+    updatedAt: now_iso,
   };
 
   await client.send(new PutCommand({

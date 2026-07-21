@@ -33,14 +33,17 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   for (let i = 0; i < sourceEntries.length; i++) {
     const entry = sourceEntries[i];
+    const nowIso = new Date(now + i).toISOString();
     const newEntry = {
       owner: userId,
-      timestamp: new Date(now + i).toISOString(),
+      timestamp: nowIso,
       rawInput: entry.rawInput,
       resolvedName: entry.resolvedName,
       macros: entry.macros,
       mealSlot: entry.mealSlot,
       dictionaryRef: entry.dictionaryRef,
+      createdAt: nowIso,
+      updatedAt: nowIso,
     };
 
     await client.send(new PutCommand({ TableName: FOOD_LOG_TABLE, Item: newEntry }));

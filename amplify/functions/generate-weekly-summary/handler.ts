@@ -33,6 +33,15 @@ function getPreviousWeekRange(): { start: string; end: string; weekStart: string
   };
 }
 
+function computeSleepHours(bedTime: string, wakeTime: string): number {
+  const [bedH, bedM] = bedTime.split(':').map(Number);
+  const [wakeH, wakeM] = wakeTime.split(':').map(Number);
+  let bedMinutes = bedH * 60 + bedM;
+  let wakeMinutes = wakeH * 60 + wakeM;
+  if (wakeMinutes <= bedMinutes) wakeMinutes += 24 * 60;
+  return (wakeMinutes - bedMinutes) / 60;
+}
+
 function findSymptomCorrelations(foodItems: any[], symptoms: any[]): string[] {
   const correlations: string[] = [];
   const injectionDays = symptoms.filter((s: any) => s.injectionDay).map((s: any) => s.date);
@@ -57,6 +66,39 @@ function findSymptomCorrelations(foodItems: any[], symptoms: any[]): string[] {
 
       if (postAvgProtein < otherAvgProtein * 0.7) {
         correlations.push('Protein intake drops significantly on injection days and the day after.');
+      }
+    }
+
+  }
+
+  // Sleep on injection nights vs other nights
+  const withSleep = symptoms.filter((s: any) => s.sleepBedTime && s.sleepWakeTime);
+  if (withSleep.length >= 3 && injectionDays.length > 0) {
+    const injectionSleep = withSleep.filter((s: any) => injectionDays.includes(s.date));
+    const otherSleep = withSleep.filter((s: any) => !injectionDays.includes(s.date));
+
+    if (injectionSleep.length > 0 && otherSleep.length > 0) {
+      const avgInjSleep = injectionSleep.reduce((s: number, e: any) => s + computeSleepHours(e.sleepBedTime, e.sleepWakeTime), 0) / injectionSleep.length;
+      const avgOtherSleep = otherSleep.reduce((s: number, e: any) => s + computeSleepHours(e.sleepBedTime, e.sleepWakeTime), 0) / otherSleep.length;
+
+      if (avgInjSleep < avgOtherSleep - 0.75) {
+        correlations.push(`Sleep is shorter on injection nights (avg ${avgInjSleep.toFixed(1)}h vs ${avgOtherSleep.toFixed(1)}h).`);
+      }
+    }
+  }
+
+  // Fatigue after poor sleep (independent of injection days)
+  const withSleepAndSymptoms = symptoms.filter((s: any) => s.sleepBedTime && s.sleepWakeTime && s.symptoms?.fatigue !== undefined);
+  if (withSleepAndSymptoms.length >= 3) {
+    const shortSleepDays = withSleepAndSymptoms.filter((s: any) => computeSleepHours(s.sleepBedTime, s.sleepWakeTime) < 6.5);
+    const normalSleepDays = withSleepAndSymptoms.filter((s: any) => computeSleepHours(s.sleepBedTime, s.sleepWakeTime) >= 6.5);
+
+    if (shortSleepDays.length > 0 && normalSleepDays.length > 0) {
+      const avgFatigueShort = shortSleepDays.reduce((s: number, e: any) => s + e.symptoms.fatigue, 0) / shortSleepDays.length;
+      const avgFatigueNormal = normalSleepDays.reduce((s: number, e: any) => s + e.symptoms.fatigue, 0) / normalSleepDays.length;
+
+      if (avgFatigueShort > avgFatigueNormal + 1) {
+        correlations.push('Fatigue is noticeably higher on days following less than 6.5 hours of sleep.');
       }
     }
   }
@@ -126,7 +168,17 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const avgCalories = Math.round(totalCalories / daysWithFood);
   const correlations = findSymptomCorrelations(foodItems, symptomItems);
 
-  const computedStats = { avgProtein, avgFiber, avgCalories, hydrationDays: daysWithHydration, symptomCorrelations: correlations };
+  // Compute sleep stats
+  const sleepEntries = symptomItems.filter((s: any) => s.sleepBedTime && s.sleepWakeTime);
+  const avgSleepHours = sleepEntries.length > 0
+    ? sleepEntries.reduce((s: number, e: any) => s + computeSleepHours(e.sleepBedTime, e.sleepWakeTime), 0) / sleepEntries.length
+    : null;
+
+  const computedStats = { avgProtein, avgFiber, avgCalories, hydrationDays: daysWithHydration, avgSleepHours, symptomCorrelations: correlations };
+
+  const sleepLine = avgSleepHours !== null
+    ? `- Average sleep: ${avgSleepHours.toFixed(1)} hours/night (${sleepEntries.length} nights logged)`
+    : '- Sleep: not tracked this week';
 
   const prompt = `You are a supportive nutrition coach for someone on GLP-1 medication.
 Their dietary preference: ${user.dietaryPreference || 'no restrictions'}.
@@ -137,11 +189,12 @@ Here are their computed stats for the week:
 - Average daily fiber: ${avgFiber}g (target: ${user.fiberTarget || 25}g)
 - Days with hydration logged: ${daysWithHydration}/7
 - Injection days this week: ${symptomItems.filter((s: any) => s.injectionDay).length}
+${sleepLine}
 
 Symptom-nutrition correlations found:
 ${correlations.length > 0 ? correlations.join('\n') : 'No significant correlations detected.'}
 
-Write a 3-5 sentence narrative summary. Include what they did well, one pattern worth noting (especially symptom correlations if any), and one specific actionable suggestion that fits their diet. If average calories are notably low (under 1000), gently suggest they may not be eating enough overall — but frame it qualitatively ("eating enough to fuel your body") rather than citing the number. Be encouraging and specific.`;
+Write a 3-5 sentence narrative summary. Include what they did well, one pattern worth noting (especially symptom or sleep correlations if any), and one specific actionable suggestion that fits their diet. If average calories are notably low (under 1000), gently suggest they may not be eating enough overall — but frame it qualitatively ("eating enough to fuel your body") rather than citing the number. If sleep is notably low (under 7 hours), mention it supportively. Be encouraging and specific.`;
 
   const command = new InvokeModelCommand({
     modelId: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
@@ -158,11 +211,14 @@ Write a 3-5 sentence narrative summary. Include what they did well, one pattern 
   const responseBody = JSON.parse(new TextDecoder().decode(response.body));
   const narrativeText = responseBody.content[0].text;
 
+  const nowIso = new Date().toISOString();
   const summary = {
     owner: userId,
     weekStart,
     narrativeText,
     computedStats,
+    createdAt: nowIso,
+    updatedAt: nowIso,
   };
 
   await db.send(new PutCommand({ TableName: SUMMARY_TABLE, Item: summary }));

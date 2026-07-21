@@ -14,11 +14,14 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'date and symptoms are required' }) };
   }
 
+  const now = new Date().toISOString();
   const entry = {
     owner: userId,
     date,
     injectionDay: injectionDay || false,
     symptoms,
+    createdAt: now,
+    updatedAt: now,
   };
 
   await client.send(new PutCommand({ TableName: TABLE, Item: entry }));

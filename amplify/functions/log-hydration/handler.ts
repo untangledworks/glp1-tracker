@@ -18,11 +18,14 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const timeComponent = now.toISOString().split('T')[1];
   const dateComponent = localDate || now.toISOString().split('T')[0];
 
+  const nowIso = now.toISOString();
   const entry = {
     owner: userId,
     timestamp: `${dateComponent}T${timeComponent}`,
     vesselType,
     oz,
+    createdAt: nowIso,
+    updatedAt: nowIso,
   };
 
   await client.send(new PutCommand({ TableName: TABLE, Item: entry }));

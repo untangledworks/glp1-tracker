@@ -14,13 +14,15 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'foodAlias and macros are required' }) };
   }
 
+  const now = new Date().toISOString();
   const entry = {
     owner: userId,
     foodAlias: foodAlias.toLowerCase(),
     components: components || null,
     macros,
     source: 'USER_CORRECTED',
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
   };
 
   await client.send(new PutCommand({ TableName: TABLE, Item: entry }));
