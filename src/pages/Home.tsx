@@ -39,8 +39,15 @@ export default function Home() {
     }
   }
 
+  function handleOptimisticAdd(tempEntry: FoodLogEntryType) {
+    setEntries(prev => [...prev, { ...tempEntry, _pending: true } as any]);
+  }
+
   function handleFoodLogged(entry: FoodLogEntryType) {
-    setEntries(prev => [...prev, entry]);
+    setEntries(prev => {
+      const withoutPending = prev.filter((e: any) => !e._pending);
+      return [...withoutPending, entry];
+    });
     loadToday();
   }
 
@@ -102,7 +109,7 @@ export default function Home() {
         </div>
       )}
 
-      <FoodInput onFoodLogged={handleFoodLogged} />
+      <FoodInput onFoodLogged={handleFoodLogged} onOptimisticAdd={handleOptimisticAdd} />
 
       <RepeatMealButton onMealRepeated={handleMealRepeated} />
 
@@ -125,7 +132,14 @@ export default function Home() {
           <h2 className="text-xs font-medium text-forest/50 uppercase tracking-wide mb-3">Today</h2>
           <div className="space-y-1">
             {entries.map(entry => (
-              <FoodLogEntry key={entry.timestamp} entry={entry} />
+              <FoodLogEntry
+                key={entry.timestamp}
+                entry={entry}
+                onDeleted={(ts) => {
+                  setEntries(prev => prev.filter(e => e.timestamp !== ts));
+                  loadToday();
+                }}
+              />
             ))}
           </div>
         </div>

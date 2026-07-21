@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../api/client';
 
 export default function Settings() {
   const { signOut } = useAuth();
@@ -13,7 +14,22 @@ export default function Settings() {
   );
   const [injectionDay, setInjectionDay] = useState(localStorage.getItem('injectionDayOfWeek') || '');
   const [sleepTracking, setSleepTracking] = useState(localStorage.getItem('sleepTrackingEnabled') === 'true');
+  const [weightLbs, setWeightLbs] = useState(localStorage.getItem('weightLbs') || '');
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getSettings().then(({ settings }) => {
+      if (settings.displayName) { setDisplayName(settings.displayName); localStorage.setItem('displayName', settings.displayName); }
+      if (settings.dietaryPreference) { setDiet(settings.dietaryPreference); localStorage.setItem('dietaryPreference', settings.dietaryPreference); }
+      if (settings.hydrationVessels) { setVessels(settings.hydrationVessels); localStorage.setItem('hydrationVessels', JSON.stringify(settings.hydrationVessels)); }
+      if (settings.injectionDayOfWeek) { setInjectionDay(settings.injectionDayOfWeek); localStorage.setItem('injectionDayOfWeek', settings.injectionDayOfWeek); }
+      if (settings.sleepTrackingEnabled !== undefined) { setSleepTracking(settings.sleepTrackingEnabled); localStorage.setItem('sleepTrackingEnabled', settings.sleepTrackingEnabled ? 'true' : 'false'); }
+      if (settings.weightLbs) { setWeightLbs(String(settings.weightLbs)); localStorage.setItem('weightLbs', String(settings.weightLbs)); }
+      if (settings.proteinTarget) { localStorage.setItem('proteinTarget', String(settings.proteinTarget)); }
+    }).catch(err => console.error('Failed to load settings:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
   function updateVessel(index: number, field: 'name' | 'oz', value: string | number) {
     const updated = [...vessels];
@@ -22,7 +38,7 @@ export default function Settings() {
     setSaved(false);
   }
 
-  function handleSave() {
+  async function handleSave() {
     localStorage.setItem('displayName', displayName);
     localStorage.setItem('dietaryPreference', diet);
     localStorage.setItem('hydrationVessels', JSON.stringify(vessels));
@@ -32,6 +48,26 @@ export default function Settings() {
       localStorage.removeItem('injectionDayOfWeek');
     }
     localStorage.setItem('sleepTrackingEnabled', sleepTracking ? 'true' : 'false');
+    if (weightLbs) {
+      localStorage.setItem('weightLbs', weightLbs);
+      const proteinTarget = Math.round(parseFloat(weightLbs) * 0.453592);
+      localStorage.setItem('proteinTarget', String(proteinTarget));
+    }
+
+    try {
+      await api.saveSettings({
+        displayName,
+        dietaryPreference: diet,
+        hydrationVessels: vessels,
+        injectionDayOfWeek: injectionDay || undefined,
+        sleepTrackingEnabled: sleepTracking,
+        weightLbs: weightLbs ? parseFloat(weightLbs) : undefined,
+        proteinTarget: weightLbs ? Math.round(parseFloat(weightLbs) * 0.453592) : undefined,
+      });
+    } catch (err) {
+      console.error('Failed to save settings to backend:', err);
+    }
+
     setSaved(true);
   }
 
@@ -39,6 +75,8 @@ export default function Settings() {
     await signOut();
     navigate('/onboarding');
   }
+
+  if (loading) return <div className="flex items-center justify-center h-64 text-forest/50">Loading settings...</div>;
 
   return (
     <div className="space-y-6">
@@ -68,6 +106,26 @@ export default function Settings() {
             <option value="pescatarian">Pescatarian</option>
             <option value="no restrictions">No restrictions</option>
           </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-forest/60">Weight</label>
+          <div className="relative">
+            <input
+              type="number"
+              inputMode="decimal"
+              value={weightLbs}
+              onChange={(e) => { setWeightLbs(e.target.value); setSaved(false); }}
+              placeholder="Your weight"
+              className="w-full bg-ivory border border-forest/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-forest/40 text-sm">lbs</span>
+          </div>
+          {weightLbs && parseFloat(weightLbs) > 0 && (
+            <p className="text-xs text-forest/50">
+              Protein target: {Math.round(parseFloat(weightLbs) * 0.453592)}g/day
+            </p>
+          )}
         </div>
 
         <div className="space-y-3">

@@ -36,6 +36,10 @@ const realApi = {
     return authFetch('/log-food', { method: 'POST', body: JSON.stringify(data) });
   },
 
+  deleteFood(timestamp: string): Promise<{ deleted: boolean }> {
+    return authFetch('/delete-food', { method: 'POST', body: JSON.stringify({ timestamp }) });
+  },
+
   logHydration(vesselType: string, oz: number): Promise<{ entry: HydrationLogEntry }> {
     return authFetch('/log-hydration', { method: 'POST', body: JSON.stringify({ vesselType, oz }) });
   },
@@ -72,6 +76,14 @@ const realApi = {
   getDailyNarrative(date?: string): Promise<{ narrative: string; suggestions: string[] }> {
     const params = date ? `?date=${date}` : '';
     return authFetch(`/generate-daily-narrative${params}`);
+  },
+
+  saveSettings(settings: Record<string, any>): Promise<{ settings: Record<string, any> }> {
+    return authFetch('/save-settings', { method: 'POST', body: JSON.stringify(settings) });
+  },
+
+  getSettings(): Promise<{ settings: Record<string, any> }> {
+    return authFetch('/get-settings');
   },
 
   getWeeklySummary(): Promise<{ summary: { narrativeText: string; computedStats: any } }> {

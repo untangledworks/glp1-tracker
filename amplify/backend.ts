@@ -13,6 +13,9 @@ import { getRecentFoods } from './functions/get-recent-foods/resource';
 import { repeatMeal } from './functions/repeat-meal/resource';
 import { updateFoodDictionary } from './functions/update-food-dictionary/resource';
 import { generateDailyNarrative } from './functions/generate-daily-narrative/resource';
+import { deleteFood } from './functions/delete-food/resource';
+import { saveSettings } from './functions/save-settings/resource';
+import { getSettings } from './functions/get-settings/resource';
 import { generateWeeklySummary } from './functions/generate-weekly-summary/resource';
 
 const backend = defineBackend({
@@ -27,6 +30,9 @@ const backend = defineBackend({
   repeatMeal,
   updateFoodDictionary,
   generateDailyNarrative,
+  deleteFood,
+  saveSettings,
+  getSettings,
   generateWeeklySummary,
 });
 
@@ -37,6 +43,7 @@ const tables = backend.data.resources.tables;
 // Map of function → which tables it needs access to
 const functionTableAccess: Record<string, { fn: any; tables: string[] }> = {
   logFood: { fn: backend.logFood, tables: ['FoodLog', 'RecentFoodIndex'] },
+  deleteFood: { fn: backend.deleteFood, tables: ['FoodLog'] },
   logHydration: { fn: backend.logHydration, tables: ['HydrationLog'] },
   logSymptoms: { fn: backend.logSymptoms, tables: ['SymptomLog'] },
   getToday: { fn: backend.getToday, tables: ['FoodLog', 'HydrationLog', 'User'] },
@@ -44,6 +51,8 @@ const functionTableAccess: Record<string, { fn: any; tables: string[] }> = {
   repeatMeal: { fn: backend.repeatMeal, tables: ['FoodLog', 'RecentFoodIndex'] },
   updateFoodDictionary: { fn: backend.updateFoodDictionary, tables: ['FoodDictionary'] },
   generateDailyNarrative: { fn: backend.generateDailyNarrative, tables: ['FoodLog', 'HydrationLog', 'User'] },
+  saveSettings: { fn: backend.saveSettings, tables: ['User'] },
+  getSettings: { fn: backend.getSettings, tables: ['User'] },
   generateWeeklySummary: { fn: backend.generateWeeklySummary, tables: ['FoodLog', 'HydrationLog', 'SymptomLog', 'User', 'WeeklySummary'] },
 };
 
@@ -126,6 +135,7 @@ const authOptions: apigateway.MethodOptions = {
 const routes: { path: string; method: string; fn: any }[] = [
   { path: 'parse-food', method: 'POST', fn: backend.parseFood },
   { path: 'log-food', method: 'POST', fn: backend.logFood },
+  { path: 'delete-food', method: 'POST', fn: backend.deleteFood },
   { path: 'log-hydration', method: 'POST', fn: backend.logHydration },
   { path: 'log-symptoms', method: 'POST', fn: backend.logSymptoms },
   { path: 'get-today', method: 'GET', fn: backend.getToday },
@@ -133,6 +143,8 @@ const routes: { path: string; method: string; fn: any }[] = [
   { path: 'repeat-meal', method: 'POST', fn: backend.repeatMeal },
   { path: 'update-food-dictionary', method: 'PUT', fn: backend.updateFoodDictionary },
   { path: 'generate-daily-narrative', method: 'GET', fn: backend.generateDailyNarrative },
+  { path: 'save-settings', method: 'POST', fn: backend.saveSettings },
+  { path: 'get-settings', method: 'GET', fn: backend.getSettings },
   { path: 'get-weekly-summary', method: 'GET', fn: backend.generateWeeklySummary },
 ];
 

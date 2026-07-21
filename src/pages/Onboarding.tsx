@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { confirmSignUp } from 'aws-amplify/auth';
+import { api } from '../api/client';
 
-type Step = 'welcome' | 'signin' | 'confirm' | 'diet' | 'injection' | 'sleep';
+type Step = 'welcome' | 'signin' | 'confirm' | 'diet' | 'weight' | 'injection' | 'sleep';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -12,6 +13,7 @@ export default function Onboarding() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmCode, setConfirmCode] = useState('');
+  const [weight, setWeight] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
   const { signIn, signUp, isAuthenticated, isLoading } = useAuth();
@@ -50,6 +52,17 @@ export default function Onboarding() {
 
   function handleDietSelect(preference: string) {
     localStorage.setItem('dietaryPreference', preference);
+    setStep('weight');
+  }
+
+  function handleWeight(e: React.FormEvent) {
+    e.preventDefault();
+    const lbs = parseFloat(weight);
+    if (!lbs) return;
+    const kg = lbs * 0.453592;
+    const proteinTarget = Math.round(kg * 1.0);
+    localStorage.setItem('weightLbs', String(lbs));
+    localStorage.setItem('proteinTarget', String(proteinTarget));
     setStep('injection');
   }
 
@@ -60,9 +73,22 @@ export default function Onboarding() {
     setStep('sleep');
   }
 
-  function handleSleepChoice(enabled: boolean) {
+  async function handleSleepChoice(enabled: boolean) {
     localStorage.setItem('sleepTrackingEnabled', enabled ? 'true' : 'false');
     localStorage.setItem('onboardingComplete', 'true');
+
+    try {
+      await api.saveSettings({
+        dietaryPreference: localStorage.getItem('dietaryPreference') || 'no restrictions',
+        proteinTarget: parseInt(localStorage.getItem('proteinTarget') || '60'),
+        weightLbs: parseFloat(localStorage.getItem('weightLbs') || '0') || undefined,
+        injectionDayOfWeek: localStorage.getItem('injectionDayOfWeek') || undefined,
+        sleepTrackingEnabled: enabled,
+      });
+    } catch (err) {
+      console.error('Failed to save settings to backend:', err);
+    }
+
     navigate('/');
   }
 
@@ -187,6 +213,48 @@ export default function Onboarding() {
             </button>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (step === 'weight') {
+    return (
+      <div className="flex flex-col justify-center min-h-screen p-8 max-w-md mx-auto">
+        <h2 className="font-display text-2xl font-semibold mb-2">What's your current weight?</h2>
+        <p className="text-forest/60 mb-8">
+          We use this to set your protein target — about 1g per kg of body weight to protect muscle on GLP-1.
+        </p>
+        <form onSubmit={handleWeight} className="space-y-4">
+          <div className="relative">
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="Weight"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              className="w-full bg-white border border-forest/10 rounded-2xl px-4 py-3.5 text-lg placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage"
+              required
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-forest/40">lbs</span>
+          </div>
+          {weight && parseFloat(weight) > 0 && (
+            <p className="text-sm text-forest/60">
+              Your protein target: <span className="font-medium text-forest">{Math.round(parseFloat(weight) * 0.453592)}g/day</span>
+            </p>
+          )}
+          <button
+            type="submit"
+            className="w-full bg-sage text-white py-3.5 rounded-2xl text-lg font-medium hover:bg-sage-dark transition-colors"
+          >
+            Continue
+          </button>
+        </form>
+        <button
+          onClick={() => setStep('injection')}
+          className="mt-4 text-forest/40 text-sm hover:text-forest/60 transition-colors"
+        >
+          Skip — I'll use the default (60g)
+        </button>
       </div>
     );
   }

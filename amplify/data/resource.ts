@@ -9,6 +9,9 @@ const schema = a.schema({
     proteinTarget: a.integer().default(60),
     fiberTarget: a.integer().default(25),
     hydrationTarget: a.integer().default(64),
+    weightLbs: a.float(),
+    injectionDayOfWeek: a.string(),
+    sleepTrackingEnabled: a.boolean().default(false),
   }).identifier(['owner'])
     .authorization(allow => [allow.owner()]),
 
