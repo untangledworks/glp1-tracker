@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SymptomSlider } from '../components/SymptomSlider';
 import { api } from '../api/client';
 import type { Symptoms } from '../types';
@@ -13,6 +13,7 @@ export default function Symptoms() {
     appetite: 0,
   });
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const sleepEnabled = localStorage.getItem('sleepTrackingEnabled') === 'true';
   const today = new Date().toISOString().split('T')[0];
@@ -22,6 +23,16 @@ export default function Symptoms() {
   const [wakeTime, setWakeTime] = useState(
     () => localStorage.getItem(`sleepWakeTime_${today}`) || '07:00'
   );
+
+  useEffect(() => {
+    api.getSymptoms(today).then(({ entry }) => {
+      if (entry) {
+        setSymptoms(entry.symptoms as unknown as Symptoms);
+        setInjectionDay(entry.injectionDay);
+        setSaved(true);
+      }
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, [today]);
 
   function updateSymptom(key: keyof Symptoms, value: number) {
     setSymptoms(prev => ({ ...prev, [key]: value }));
@@ -52,6 +63,8 @@ export default function Symptoms() {
       console.error('Failed to log symptoms:', err);
     }
   }
+
+  if (loading) return <div className="flex items-center justify-center py-12 text-forest/50">Loading...</div>;
 
   return (
     <div className="space-y-6">

@@ -16,14 +16,16 @@ function inferMealSlot(hour: number): string {
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const userId = event.requestContext.authorizer?.claims?.sub;
   const body = JSON.parse(event.body || '{}');
-  const { rawInput, resolvedName, macros, mealSlot, dictionaryRef } = body;
+  const { rawInput, resolvedName, macros, mealSlot, dictionaryRef, localDate } = body;
 
   if (!rawInput || !macros) {
     return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'rawInput and macros are required' }) };
   }
 
   const now = new Date();
-  const timestamp = now.toISOString();
+  const timeComponent = now.toISOString().split('T')[1];
+  const dateComponent = localDate || now.toISOString().split('T')[0];
+  const timestamp = `${dateComponent}T${timeComponent}`;
   const inferredSlot = mealSlot || inferMealSlot(now.getHours());
 
   const entry = {

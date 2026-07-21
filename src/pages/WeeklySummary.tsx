@@ -38,7 +38,7 @@ export default function WeeklySummary() {
     return (
       <div className="space-y-4">
         <h1 className="font-display text-2xl font-semibold">This Week</h1>
-        <p className="text-forest/60">No summary available yet. Keep logging and check back on Sunday!</p>
+        <p className="text-forest/60">Your weekly summary appears each Monday, looking back at the previous week. Keep logging and your first one will be here soon!</p>
       </div>
     );
   }

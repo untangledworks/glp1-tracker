@@ -12,21 +12,24 @@ const SYMPTOM_TABLE = process.env.SYMPTOM_LOG_TABLE || 'SymptomLog';
 const USER_TABLE = process.env.USER_TABLE || 'User';
 const SUMMARY_TABLE = process.env.WEEKLY_SUMMARY_TABLE || 'WeeklySummary';
 
-function getWeekRange(): { start: string; end: string; weekStart: string } {
+function getPreviousWeekRange(): { start: string; end: string; weekStart: string } {
   const now = new Date();
   const dayOfWeek = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
-  monday.setHours(0, 0, 0, 0);
+  const thisMonday = new Date(now);
+  thisMonday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+  thisMonday.setHours(0, 0, 0, 0);
 
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
+  const prevMonday = new Date(thisMonday);
+  prevMonday.setDate(thisMonday.getDate() - 7);
+
+  const prevSunday = new Date(prevMonday);
+  prevSunday.setDate(prevMonday.getDate() + 6);
+  prevSunday.setHours(23, 59, 59, 999);
 
   return {
-    start: monday.toISOString(),
-    end: sunday.toISOString(),
-    weekStart: monday.toISOString().split('T')[0],
+    start: prevMonday.toISOString(),
+    end: prevSunday.toISOString(),
+    weekStart: prevMonday.toISOString().split('T')[0],
   };
 }
 
@@ -63,7 +66,17 @@ function findSymptomCorrelations(foodItems: any[], symptoms: any[]): string[] {
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const userId = event.requestContext?.authorizer?.claims?.sub;
-  const { start, end, weekStart } = getWeekRange();
+  const { start, end, weekStart } = getPreviousWeekRange();
+
+  // Check for cached summary first
+  const cached = await db.send(new GetCommand({ TableName: SUMMARY_TABLE, Key: { owner: userId, weekStart } }));
+  if (cached.Item) {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ summary: cached.Item }),
+    };
+  }
 
   const [userResult, foodResult, hydrationResult, symptomResult] = await Promise.all([
     db.send(new GetCommand({ TableName: USER_TABLE, Key: { owner: userId } })),
@@ -92,15 +105,25 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const hydrationItems = hydrationResult.Items || [];
   const symptomItems = symptomResult.Items || [];
 
+  // Require at least 3 days of food logs to generate a meaningful summary
+  const daysWithFood = new Set(foodItems.map((e: any) => e.timestamp?.split('T')[0])).size;
+  if (daysWithFood < 3) {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ summary: null }),
+    };
+  }
+
   const totalProtein = foodItems.reduce((s: number, e: any) => s + (e.macros?.protein || 0), 0);
   const totalFiber = foodItems.reduce((s: number, e: any) => s + (e.macros?.fiber || 0), 0);
   const totalCalories = foodItems.reduce((s: number, e: any) => s + (e.macros?.calories || 0), 0);
   const totalOz = hydrationItems.reduce((s: number, e: any) => s + (e.oz || 0), 0);
   const daysWithHydration = new Set(hydrationItems.map((e: any) => e.timestamp?.split('T')[0])).size;
 
-  const avgProtein = Math.round(totalProtein / 7);
-  const avgFiber = Math.round(totalFiber / 7);
-  const avgCalories = Math.round(totalCalories / 7);
+  const avgProtein = Math.round(totalProtein / daysWithFood);
+  const avgFiber = Math.round(totalFiber / daysWithFood);
+  const avgCalories = Math.round(totalCalories / daysWithFood);
   const correlations = findSymptomCorrelations(foodItems, symptomItems);
 
   const computedStats = { avgProtein, avgFiber, avgCalories, hydrationDays: daysWithHydration, symptomCorrelations: correlations };

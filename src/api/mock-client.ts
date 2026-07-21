@@ -117,6 +117,11 @@ export const mockApi = {
     return { entry };
   },
 
+  async getSymptoms(): Promise<{ entry: SymptomLogEntry | null }> {
+    await delay(100);
+    return { entry: null };
+  },
+
   async getToday(): Promise<{ nutrition: NutritionStatus; entries: FoodLogEntry[]; hydration: { totalOz: number; entries: HydrationLogEntry[] } }> {
     await delay(200);
     const totalOz = hydrationLog.reduce((s, e) => s + e.oz, 0);

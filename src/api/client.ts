@@ -33,7 +33,8 @@ const realApi = {
   },
 
   logFood(data: { rawInput: string; resolvedName: string; macros: Macros; mealSlot?: MealSlot; dictionaryRef?: string }): Promise<{ entry: FoodLogEntry }> {
-    return authFetch('/log-food', { method: 'POST', body: JSON.stringify(data) });
+    const localDate = new Date().toLocaleDateString('en-CA');
+    return authFetch('/log-food', { method: 'POST', body: JSON.stringify({ ...data, localDate }) });
   },
 
   deleteFood(timestamp: string): Promise<{ deleted: boolean }> {
@@ -45,7 +46,8 @@ const realApi = {
   },
 
   logHydration(vesselType: string, oz: number): Promise<{ entry: HydrationLogEntry }> {
-    return authFetch('/log-hydration', { method: 'POST', body: JSON.stringify({ vesselType, oz }) });
+    const localDate = new Date().toLocaleDateString('en-CA');
+    return authFetch('/log-hydration', { method: 'POST', body: JSON.stringify({ vesselType, oz, localDate }) });
   },
 
   logSymptoms(data: {
@@ -58,6 +60,11 @@ const realApi = {
     sleepWakeTime?: string;
   }): Promise<{ entry: SymptomLogEntry }> {
     return authFetch('/log-symptoms', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  getSymptoms(date?: string): Promise<{ entry: SymptomLogEntry | null }> {
+    const params = date ? `?date=${date}` : '';
+    return authFetch(`/get-symptoms${params}`);
   },
 
   getToday(date?: string): Promise<{ nutrition: NutritionStatus; entries: FoodLogEntry[]; hydration: { totalOz: number; entries: HydrationLogEntry[] } }> {

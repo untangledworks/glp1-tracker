@@ -22,7 +22,8 @@ export default function Home() {
 
   async function loadToday() {
     try {
-      const data = await api.getToday();
+      const localDate = new Date().toLocaleDateString('en-CA');
+      const data = await api.getToday(localDate);
       setEntries(data.entries);
       setNutrition(data.nutrition);
     } catch (err) {
