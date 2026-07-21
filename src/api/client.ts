@@ -40,6 +40,10 @@ const realApi = {
     return authFetch('/delete-food', { method: 'POST', body: JSON.stringify({ timestamp }) });
   },
 
+  deleteHydration(timestamp: string): Promise<{ deleted: boolean }> {
+    return authFetch('/delete-hydration', { method: 'POST', body: JSON.stringify({ timestamp }) });
+  },
+
   logHydration(vesselType: string, oz: number): Promise<{ entry: HydrationLogEntry }> {
     return authFetch('/log-hydration', { method: 'POST', body: JSON.stringify({ vesselType, oz }) });
   },

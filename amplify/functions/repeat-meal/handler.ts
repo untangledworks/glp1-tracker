@@ -4,7 +4,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const FOOD_LOG_TABLE = process.env.FOOD_LOG_TABLE || 'FoodLog';
-const RECENT_FOOD_TABLE = process.env.RECENT_FOOD_TABLE || 'RecentFoodIndex';
+const RECENT_FOOD_TABLE = process.env.RECENT_FOOD_INDEX_TABLE || 'RecentFoodIndex';
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const userId = event.requestContext.authorizer?.claims?.sub;

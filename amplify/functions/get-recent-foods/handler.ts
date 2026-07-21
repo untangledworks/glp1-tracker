@@ -3,7 +3,7 @@ import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-const TABLE = process.env.RECENT_FOOD_TABLE || 'RecentFoodIndex';
+const TABLE = process.env.RECENT_FOOD_INDEX_TABLE || 'RecentFoodIndex';
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const userId = event.requestContext.authorizer?.claims?.sub;

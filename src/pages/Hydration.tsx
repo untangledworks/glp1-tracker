@@ -2,7 +2,7 @@ import { VesselButton } from '../components/VesselButton';
 import { useHydration } from '../hooks/useHydration';
 
 export default function Hydration() {
-  const { entries, totalOz, target, isLoading, logDrink } = useHydration();
+  const { entries, totalOz, target, isLoading, logDrink, deleteDrink } = useHydration();
   const ratio = Math.min(totalOz / target, 1);
 
   const vessels = JSON.parse(localStorage.getItem('hydrationVessels') || '[{"name":"glass","oz":12},{"name":"bottle","oz":24}]');
@@ -48,7 +48,13 @@ export default function Hydration() {
                 <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z" />
               </svg>
               <span>{new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
-              <span className="text-forest/40">{entry.oz} oz</span>
+              <span className="flex-1 text-forest/40">{entry.oz} oz</span>
+              <button
+                onClick={() => deleteDrink(entry.timestamp, entry.oz)}
+                className="text-xs text-forest/30 hover:text-forest/60 px-2 py-1 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>

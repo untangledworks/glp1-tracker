@@ -178,6 +178,12 @@ export const mockApi = {
     return { deleted: true };
   },
 
+  async deleteHydration(timestamp: string): Promise<{ deleted: boolean }> {
+    await delay(150);
+    hydrationLog = hydrationLog.filter(e => e.timestamp !== timestamp);
+    return { deleted: true };
+  },
+
   async saveSettings(settings: Record<string, any>): Promise<{ settings: Record<string, any> }> {
     await delay(200);
     return { settings };

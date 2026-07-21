@@ -4,7 +4,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const FOOD_LOG_TABLE = process.env.FOOD_LOG_TABLE || 'FoodLog';
-const RECENT_FOOD_TABLE = process.env.RECENT_FOOD_TABLE || 'RecentFoodIndex';
+const RECENT_FOOD_TABLE = process.env.RECENT_FOOD_INDEX_TABLE || 'RecentFoodIndex';
 
 function inferMealSlot(hour: number): string {
   if (hour < 11) return 'BREAKFAST';

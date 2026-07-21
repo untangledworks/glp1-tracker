@@ -36,5 +36,15 @@ export function useHydration() {
     }
   }
 
-  return { entries, totalOz, target, isLoading, logDrink };
+  async function deleteDrink(timestamp: string, oz: number) {
+    try {
+      await api.deleteHydration(timestamp);
+      setEntries(prev => prev.filter(e => e.timestamp !== timestamp));
+      setTotalOz(prev => prev - oz);
+    } catch (err) {
+      console.error('Failed to delete hydration:', err);
+    }
+  }
+
+  return { entries, totalOz, target, isLoading, logDrink, deleteDrink };
 }

@@ -14,6 +14,7 @@ import { repeatMeal } from './functions/repeat-meal/resource';
 import { updateFoodDictionary } from './functions/update-food-dictionary/resource';
 import { generateDailyNarrative } from './functions/generate-daily-narrative/resource';
 import { deleteFood } from './functions/delete-food/resource';
+import { deleteHydration } from './functions/delete-hydration/resource';
 import { saveSettings } from './functions/save-settings/resource';
 import { getSettings } from './functions/get-settings/resource';
 import { generateWeeklySummary } from './functions/generate-weekly-summary/resource';
@@ -31,6 +32,7 @@ const backend = defineBackend({
   updateFoodDictionary,
   generateDailyNarrative,
   deleteFood,
+  deleteHydration,
   saveSettings,
   getSettings,
   generateWeeklySummary,
@@ -44,6 +46,7 @@ const tables = backend.data.resources.tables;
 const functionTableAccess: Record<string, { fn: any; tables: string[] }> = {
   logFood: { fn: backend.logFood, tables: ['FoodLog', 'RecentFoodIndex'] },
   deleteFood: { fn: backend.deleteFood, tables: ['FoodLog'] },
+  deleteHydration: { fn: backend.deleteHydration, tables: ['HydrationLog'] },
   logHydration: { fn: backend.logHydration, tables: ['HydrationLog'] },
   logSymptoms: { fn: backend.logSymptoms, tables: ['SymptomLog'] },
   getToday: { fn: backend.getToday, tables: ['FoodLog', 'HydrationLog', 'User'] },
@@ -136,6 +139,7 @@ const routes: { path: string; method: string; fn: any }[] = [
   { path: 'parse-food', method: 'POST', fn: backend.parseFood },
   { path: 'log-food', method: 'POST', fn: backend.logFood },
   { path: 'delete-food', method: 'POST', fn: backend.deleteFood },
+  { path: 'delete-hydration', method: 'POST', fn: backend.deleteHydration },
   { path: 'log-hydration', method: 'POST', fn: backend.logHydration },
   { path: 'log-symptoms', method: 'POST', fn: backend.logSymptoms },
   { path: 'get-today', method: 'GET', fn: backend.getToday },
